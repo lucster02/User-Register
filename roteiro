@@ -1,0 +1,145 @@
+Ideia Inicial
+
+- Criar Sistema com gestao de usuario
+- cadastro de usuario
+- recuperar senha
+- autenticacao - permissao
+
+Tecnologias
+
+BACKEND             - JAVA - SPRING BOOT - POSTGRES 
+FRONTEND WEB        - NEXT.JS - REACT - JAVASCRIPT - PRIMEREACT
+FRONTEND MOBILE     - REACT NATIVE 
+
+1- Iniciar Backend spring boot
+
+-Spring Initializer
+
+======================================
+pom.xml
+- É um arquivo de confiracao do maven
+
+Maven
+- É uma ferramentea de automatizaçao de tarefas e dependencias
+
+appilication.properties
+- É a configuracao do meu projeto Spring
+=======================================
+
+2 - Desing camadas
+
+- BD <- Repository - Service - Controller -> Front
+                   -         -
+             Entity         <-     DTO
+
+
+Criando pacotes para camadas
+======================================
+
+3 - Diferença de Conceitos 
+JAVA - SPRING BOOT - ORIENTAÇAO A OBJETOS
+
+JPA - JAVA PERSISTENCE ANNOTATION - ESPECIFICAÇAO
+HIBERNATE - FRAMEWORK ORM - AONDE FAZ ACONTECER
+os dois sao independentes de bd
+========================================
+
+4 - Criaçao da Classe UserEntity
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    É a estrategia que ele vai preencher o campo, no caso o ID vai ser identidade
+
+- Criei os Get e Setters
+- COnfigurar o hibernate
+
+    spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+    Indica qual lingua ele vai usar
+    spring.jpa.hibernate.ddl-auto=create-drop
+    Toda vez que inicia atualiza as tabelas de acordo com a notacao
+    spring.jpa.show-sql=true
+    Escreve o comando sql na tela
+
+=======================================
+Gerei Hashcode e Equals
+
+    Eu digo que esses metodos sao de comparaçao, ou seja eu digo que é uma chave primaria.
+    Fiz isso com o id, ja que ele é identidade, faz sentido usar ele como elemento de comparacao de objetos.
+    se o id for o mesmo, entao é o mesmo objeto.
+=======================================
+5 - DIFERENCA ENTRE ENTITY E DTO
+
+Eles tem responsabilidade diferentes mas sao parecidos, é um padrao separar eles em camadas
+o DTO sao dados de transferencias, se em algum momento minha entity tiver mais dados e eu nao quero que esses dados
+influenciem o front end, esse camada nao ira influenciar o DTO.
+
+Entity representa o objeto do negocio ou a tabela do BD
+
+DTO representa os dados de transferencia, que manda para o front end
+
+É interessante ter no Entity e Dto, metodos de conversao(Construtor) que possam ser convertidos entre os dois
+
+    public UserDto(UserEntity user) {
+       BeanUtils.copyProperties(user, this);
+    }
+
+    Se os dados forem iguais eles copiam um entity para user na classe entity, mas é interressante fazer isso no entity tbm
+
+É bom criar um construtor vazio tbm
+=============================================
+6 - OPERAÇOES CRUD
+
+C -> CREATE  insere dados 
+R -> READ Consulta , Select do banco de dados
+U -> UPDATE Atualzacao de dados
+D -> DELETE Exclusao de dados
+
+Manipula os dados
+
+Pelo Hibernate, nao vai ser necessario escrever codigo sql para as operacoes accima, somente implementar
+
+- Criando interface user
+
+    public interface UserRepository extends JpaRepository<UserEntity, Long> {}
+     Para as operacoes crud, ja estao implementadas devido a classe pai "JpaRepository"
+
+- Criando o UserService
+
+O service chama a classe repository, entao devo criar um objeto repository, se colocar o @Autowired 
+o spring gerencia automaticamente, instancia para a gente.
+
+Vamos criar as operacoes crud no service, elas precisam ir no repository consultar os dados e retornar como um Dto
+para ir pro controller.
+
+    public List<UserDto> ListarTodos() { // retorna dto
+        List<UserEntity> users = userRepository.findAll();
+        return users.stream().map(UserDto::new).toList(); 
+            //o Stream ja faz uma correcao pra dto, vale a pena estudar as possibilidades com o stream
+    }
+
+    public UserDto alterar(UserDto user) {
+        UserEntity userEntity = new UserEntity(user);
+        return new UserDto(userRepository.save(userEntity));
+        // O .save serve tanto para salvar e alterar: id preenchido entao altera, se nao preenchido, salva.
+    }
+
+    sao dois exemplos
+
+Já foi criado o user entity, dto, repository e service, falta o controller
+===========================================
+7 - PROTOCOLO HTTP
+
+API REST  - BASEADA EM PROTOCOLO HTTP
+
+BACKEND manda um responde por exemplo um html E
+recebe uma requisicao, um JSON
+
+algumas requisicoes:
+
+GET - Serve para buscar informacoes - é buscado atraves de uma url 
+POST - Possui um corpo, onde consigo mandar informacoes
+PUT - Possui um corpo, onde consigo mandar informacoe, alterar algo que ja existe
+DELETE - Deletar algo, e mando como parametro um id para deletar
+
+Tem relacao com o crud
+=============================================
+
